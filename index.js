@@ -1,85 +1,78 @@
 function Tetromino() {
-    this.posX = 3;
-    this.posY = -1;
-    tetrominoTypes = {
-        'T': {
-            'color': '#AD4D9C',
-            'matrix': [
-                [0, 1, 0],
-                [1, 1, 1],
-                [0, 0, 0]
-            ]
-        },
-        'Z': {
-            'color': '#EF2029',
-            'matrix': [
-                [2, 2, 0],
-                [0, 2, 2],
-                [0, 0, 0]
-            ]
-        },
-        'O': {
-            'color': '#F7D308',
-            'matrix': [
-                [3, 3],
-                [3, 3]
-            ]
-        },
-        'I': {
-            'color': '#31C7EF',
-            'matrix': [
-                [0, 0, 0, 0],
-                [4, 4, 4, 4],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0],
-            ]
-        },
-        'J': {
-            'color': '#5A65AD',
-            'matrix': [
-                [5, 0, 0],
-                [5, 5, 5],
-                [0, 0, 0]
-            ]
-        },
-        'L': {
-            'color': '#EF7921',
-            'matrix': [
-                [0, 0, 6],
-                [6, 6, 6],
-                [0, 0, 0]
-            ]
-        },
-        'S': {
-            'color': '#42B642',
-            'matrix': [
-                [0, 7, 7],
-                [7, 7, 0],
-                [0, 0, 0]
-            ]
-        }
+    this.posX = 3
+    this.posY = -1
+    this.type  = Object.keys(this.tetrominoTypes)[Math.floor(Math.random() * Object.keys(this.tetrominoTypes).length)]
+    this.matrix = this.tetrominoTypes[this.type].matrix
+}
+
+Tetromino.prototype.tetrominoTypes = {
+    'T': {
+        'matrix': [
+            [' ', 'T', ' '],
+            ['T', 'T', 'T'],
+            [' ', ' ', ' ']
+        ]
+    },
+    'Z': {
+        'matrix': [
+            ['Z', 'Z', ' '],
+            [' ', 'Z', 'Z'],
+            [' ', ' ', ' ']
+        ]
+    },
+    'O': {
+        'matrix': [
+            ['O', 'O'],
+            ['O', 'O']
+        ]
+    },
+    'I': {
+        'matrix': [
+            [' ', ' ', ' ', ' '],
+            ['I', 'I', 'I', 'I'],
+            [' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' '],
+        ]
+    },
+    'J': {
+        'matrix': [
+            ['J', ' ', ' '],
+            ['J', 'J', 'J'],
+            [' ', ' ', ' ']
+        ]
+    },
+    'L': {
+        'matrix': [
+            [' ', ' ', 'L'],
+            ['L', 'L', 'L'],
+            [' ', ' ', ' ']
+        ]
+    },
+    'S': {
+        'matrix': [
+            [' ', 'S', 'S'],
+            ['S', 'S', ' '],
+            [' ', ' ', ' ']
+        ]
     }
-    let randomType = 'IJLOTSZ'[Math.floor(Math.random() * 7)];
-    this.matrix = tetrominoTypes[randomType].matrix
-    this.color =  tetrominoTypes[randomType].color
 }
 
 function Tetris() {
-    let context = document.getElementById('arena').getContext('2d');
+    const context = document.getElementById('arena').getContext('2d');
     const SCALE = 20;
     const COLS = 10;
     const ROWS = 20;
-    matrix = []
-    colors = {
-        0: '#f1f1f1',
-        1: '#AD4D9C',
-        2: '#EF2029',
-        3: '#F7D308',
-        4: '#31C7EF',
-        5: '#5A65AD',
-        6: '#EF7921',
-        7: '#42B642',
+    cellColors = {
+        ' ': '#f1f1f1',
+        'T': '#AD4D9C',
+        'Z': '#EF2029',
+        'O': '#F7D308',
+        'I': '#31C7EF',
+        'J': '#5A65AD',
+        'L': '#EF7921',
+        'S': '#42B642'
     }
+    matrix = []
 
     function init() {
         buildPlayground();
@@ -117,50 +110,50 @@ function Tetris() {
         for (let r = 0; r < ROWS; r++) {
             matrix[r] = []
             for (let c = 0; c < COLS; c++) {
-                matrix[r][c] = 0
-                drawCell(c, r, this.colors[0], '#666666')
+                matrix[r][c] = ' '
+                drawCell(c, r, cellColors[matrix[r][c]])
             }
         }
     }
 
-    function drawCell(posX, posY, bgColor, outlineColor) {
+    function drawCell(posX, posY, bgColor) {
         context.fillStyle = bgColor;
         context.fillRect(posX * SCALE, posY * SCALE, SCALE, SCALE);
-        context.strokeStyle = outlineColor
+        context.strokeStyle = bgColor === '#f1f1f1' ? '#666666' : '#ffffff'
         context.strokeRect(posX * SCALE, posY * SCALE, SCALE, SCALE)
     }
 
     function drawTetromino(tetromino) {
-        for (let r = 0; r < tetromino.matrix.length; r++) {
-            for (let c = 0; c < tetromino.matrix.length; c++) {
-                if (tetromino.matrix[r][c]) {
-                    drawCell(c + tetromino.posX, r + tetromino.posY, tetromino.color, 'white')
+        tetromino.matrix.forEach((row, rowIdx) => {
+            row.forEach((col, colIdx) => {
+                if (col !== ' ') {
+                    drawCell(colIdx + tetromino.posX, rowIdx + tetromino.posY, cellColors[tetromino.type])
                 }
-            }
-        }
+            });
+        })
     }
 
     function undrawTetromino(tetromino) {
-        for (let r = 0; r < tetromino.matrix.length; r++) {
-            for (let c = 0; c < tetromino.matrix.length; c++) {
-                if (tetromino.matrix[r][c]) {
-                    drawCell(c + tetromino.posX, r + tetromino.posY, this.colors[0], '#666666')
+        tetromino.matrix.forEach((row, rowIdx) => {
+            row.forEach((col, colIdx) => {
+                if (col !== ' ') {
+                    drawCell(colIdx + tetromino.posX, rowIdx + tetromino.posY, cellColors[' '])
                 }
-            }
-        }
+            });
+        })
     }
     
     function collides(tetromino, x, y) {
         for (let r = 0; r < tetromino.matrix.length; r++) {
             for (let c = 0; c <  tetromino.matrix.length; c++) {
-                if (!tetromino.matrix[r][c]) {
+                if (tetromino.matrix[r][c] === ' ') {
                     continue;
                 }
     
-                let newX = tetromino.posX + c + x;
-                let newY = tetromino.posY + r + y;
+                const newX = tetromino.posX + c + x;
+                const newY = tetromino.posY + r + y;
     
-                if (newX < 0 || newX >= COLS || newY >= ROWS || matrix[newY][newX] !== 0) {
+                if (newX < 0 || newX >= COLS || newY >= ROWS || matrix[newY][newX] !== ' ') {
                     return true;
                 }
     
@@ -178,7 +171,7 @@ function Tetris() {
                 break;
             }
             for (let c = 0; c < tetromino.matrix.length; c++) {
-                if (! tetromino.matrix[r][c]) {
+                if (tetromino.matrix[r][c] === ' ') {
                     continue
                 }
                 if  (c + tetromino.posX < 0) {
@@ -193,29 +186,20 @@ function Tetris() {
     }
 
     function refreshPlayfield() {
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                if (!matrix[r][c]) {
-                    drawCell(c, r, this.colors[matrix[r][c]], '#666666');
-                } else {
-                    drawCell(c, r, this.colors[matrix[r][c]], 'white');
-                }
-            }
-        }
+        matrix.forEach((row, rowIdx) => {
+            row.forEach((_, colIdx) => {
+                drawCell(colIdx, rowIdx, cellColors[matrix[rowIdx][colIdx]]);
+            })
+        });
     }
 
     function swipeFullRowsIfAny() {
-        for (let r = 0; r < ROWS; r++) {
-            let isFull = true;
-            for (let c = 0; c < COLS; c++) {
-                isFull = isFull && matrix[r][c];
-            }
-            if (isFull) {
-                const emptyRow = matrix.splice(r, 1).flat().fill(0);
-                matrix.unshift(emptyRow);
+        matrix.forEach((row, rowIdx) => {
+            if (!row.some(c => c === ' ')) {
+                matrix.unshift(matrix.splice(rowIdx, 1).flat().fill(' '));
                 refreshPlayfield()
-            }
-        }
+            } 
+        });
     }
 
     function moveDown(tetromino) {
@@ -227,7 +211,7 @@ function Tetris() {
                 return;
             }
             swipeFullRowsIfAny();
-            this.currentTetromino = new Tetromino();
+            currentTetromino = new Tetromino();
             return;
         }
         tetromino.posY++;  

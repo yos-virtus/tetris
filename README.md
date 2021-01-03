@@ -1,2 +1,2 @@
-# tetris
-Primitive implementation of tetris game
+# Tetris game
+Simple implementation of tetris game

@@ -1,76 +1,86 @@
 function Tetromino() {
     this.posX = 3
     this.posY = -1
-    this.type  = Object.keys(this.tetrominoTypes)[Math.floor(Math.random() * Object.keys(this.tetrominoTypes).length)]
-    this.matrix = this.tetrominoTypes[this.type].matrix
+    const tetrominoLabels = Object.keys(this.tetrominoTypes)
+    this.type = tetrominoLabels[Math.floor(Math.random() * tetrominoLabels.length)]
+    this.matrix = this.tetrominoTypes[this.type]
 }
 
 Tetromino.prototype.tetrominoTypes = {
-    'T': {
-        'matrix': [
-            [' ', 'T', ' '],
-            ['T', 'T', 'T'],
-            [' ', ' ', ' ']
-        ]
-    },
-    'Z': {
-        'matrix': [
-            ['Z', 'Z', ' '],
-            [' ', 'Z', 'Z'],
-            [' ', ' ', ' ']
-        ]
-    },
-    'O': {
-        'matrix': [
-            ['O', 'O'],
-            ['O', 'O']
-        ]
-    },
-    'I': {
-        'matrix': [
-            [' ', ' ', ' ', ' '],
-            ['I', 'I', 'I', 'I'],
-            [' ', ' ', ' ', ' '],
-            [' ', ' ', ' ', ' '],
-        ]
-    },
-    'J': {
-        'matrix': [
-            ['J', ' ', ' '],
-            ['J', 'J', 'J'],
-            [' ', ' ', ' ']
-        ]
-    },
-    'L': {
-        'matrix': [
-            [' ', ' ', 'L'],
-            ['L', 'L', 'L'],
-            [' ', ' ', ' ']
-        ]
-    },
-    'S': {
-        'matrix': [
-            [' ', 'S', 'S'],
-            ['S', 'S', ' '],
-            [' ', ' ', ' ']
-        ]
+    'T': [
+        [new Cell(' '), new Cell('V'), new Cell(' ')],
+        [new Cell('V'), new Cell('V'), new Cell('V')],
+        [new Cell(' '), new Cell(' '), new Cell(' ')]
+    ],
+    'Z': [
+        [new Cell('R'), new Cell('R'), new Cell(' ')],
+        [new Cell(' '), new Cell('R'), new Cell('R')],
+        [new Cell(' '), new Cell(' '), new Cell(' ')]
+    ],
+    'O': [
+        [new Cell('Y'), new Cell('Y')],
+        [new Cell('Y'), new Cell('Y')]
+    ],
+    'I': [
+        [new Cell(' '), new Cell(' '), new Cell(' '), new Cell(' ')],
+        [new Cell('A'), new Cell('A'), new Cell('A'), new Cell('A')],
+        [new Cell(' '), new Cell(' '), new Cell(' '), new Cell(' ')],
+        [new Cell(' '), new Cell(' '), new Cell(' '), new Cell(' ')],
+    ],
+    'J': [
+        [new Cell('B'), new Cell(' '), new Cell(' ')],
+        [new Cell('B'), new Cell('B'), new Cell('B')],
+        [new Cell(' '), new Cell(' '), new Cell(' ')]
+    ],
+    'L': [
+        [new Cell(' '), new Cell(' '), new Cell('O')],
+        [new Cell('O'), new Cell('O'), new Cell('O')],
+        [new Cell(' '), new Cell(' '), new Cell(' ')]
+    ],
+    'S': [
+        [new Cell(' '), new Cell('G'), new Cell('G')],
+        [new Cell('G'), new Cell('G'), new Cell(' ')],
+        [new Cell(' '), new Cell(' '), new Cell(' ')]
+    ]
+}
+
+function Cell(colorLabel) {
+    this.colorLabel = colorLabel !== undefined ? colorLabel : ' '
+    this.color = function () {
+        return this.colors[this.colorLabel]
     }
 }
 
+Cell.prototype.colors = {
+    ' ': '#f1f1f1',
+    'B': '#5A65AD',
+    'O': '#EF7921',
+    'Y': '#F7D308',
+    'A': '#31C7EF',
+    'G': '#42B642',
+    'R': '#EF2029',
+    'V': '#AD4D9C'
+}
+
+Cell.prototype.isEmpty = function () {
+    return this.colorLabel === ' '
+}
+
+Cell.prototype.draw = function (posX, posY, arena) {
+    const {drawingContext, SCALE} = arena
+    drawingContext.fillStyle = this.color();
+    drawingContext.fillRect(posX * SCALE, posY * SCALE, SCALE, SCALE);
+    drawingContext.strokeStyle = this.color() === '#f1f1f1' ? '#666666' : '#ffffff'
+    drawingContext.strokeRect(posX * SCALE, posY * SCALE, SCALE, SCALE)
+}
+
+
 function Tetris() {
-    const context = document.getElementById('arena').getContext('2d');
-    const SCALE = 20;
-    const COLS = 10;
-    const ROWS = 20;
-    cellColors = {
-        ' ': '#f1f1f1',
-        'T': '#AD4D9C',
-        'Z': '#EF2029',
-        'O': '#F7D308',
-        'I': '#31C7EF',
-        'J': '#5A65AD',
-        'L': '#EF7921',
-        'S': '#42B642'
+    arena = {
+        'drawingContext': document.getElementById('arena').getContext('2d'),
+        'SCALE': 20,
+        'COLS': 10,
+        'ROWS': 20
     }
     matrix = []
 
@@ -107,27 +117,19 @@ function Tetris() {
     }
 
     function buildPlayground() {
-        for (let r = 0; r < ROWS; r++) {
-            matrix[r] = []
-            for (let c = 0; c < COLS; c++) {
-                matrix[r][c] = ' '
-                drawCell(c, r, cellColors[matrix[r][c]])
-            }
-        }
-    }
-
-    function drawCell(posX, posY, bgColor) {
-        context.fillStyle = bgColor;
-        context.fillRect(posX * SCALE, posY * SCALE, SCALE, SCALE);
-        context.strokeStyle = bgColor === '#f1f1f1' ? '#666666' : '#ffffff'
-        context.strokeRect(posX * SCALE, posY * SCALE, SCALE, SCALE)
+        [...Array(arena.ROWS).keys()].forEach(rowIdx => {
+            matrix[rowIdx] = [];
+            [...Array(arena.COLS).keys()].forEach(colIdx => {
+                (matrix[rowIdx][colIdx] = new Cell()).draw(colIdx, rowIdx, arena)
+            })
+        })
     }
 
     function drawTetromino(tetromino) {
         tetromino.matrix.forEach((row, rowIdx) => {
-            row.forEach((col, colIdx) => {
-                if (col !== ' ') {
-                    drawCell(colIdx + tetromino.posX, rowIdx + tetromino.posY, cellColors[tetromino.type])
+            row.forEach((cell, colIdx) => {
+                if (!cell.isEmpty()) {
+                    cell.draw(colIdx + tetromino.posX, rowIdx + tetromino.posY, arena)
                 }
             });
         })
@@ -135,9 +137,9 @@ function Tetris() {
 
     function undrawTetromino(tetromino) {
         tetromino.matrix.forEach((row, rowIdx) => {
-            row.forEach((col, colIdx) => {
-                if (col !== ' ') {
-                    drawCell(colIdx + tetromino.posX, rowIdx + tetromino.posY, cellColors[' '])
+            row.forEach((cell, colIdx) => {
+                if (!cell.isEmpty()) {
+                    (new Cell()).draw(colIdx + tetromino.posX, rowIdx + tetromino.posY, arena)
                 }
             });
         })
@@ -146,14 +148,14 @@ function Tetris() {
     function collides(tetromino, x, y) {
         for (let r = 0; r < tetromino.matrix.length; r++) {
             for (let c = 0; c <  tetromino.matrix.length; c++) {
-                if (tetromino.matrix[r][c] === ' ') {
+                if (tetromino.matrix[r][c].isEmpty()) {
                     continue;
                 }
     
                 const newX = tetromino.posX + c + x;
                 const newY = tetromino.posY + r + y;
     
-                if (newX < 0 || newX >= COLS || newY >= ROWS || matrix[newY][newX] !== ' ') {
+                if (newX < 0 || newX >= arena.COLS || newY >= arena.ROWS || !matrix[newY][newX].isEmpty()) {
                     return true;
                 }
     
@@ -167,36 +169,29 @@ function Tetris() {
 
     function freeze(tetromino) {
         for (let r = 0; r < tetromino.matrix.length; r++) {
-            if  (r + tetromino.posY >= ROWS) {
+            if (r + tetromino.posY >= arena.ROWS) {
                 break;
             }
-            for (let c = 0; c < tetromino.matrix.length; c++) {
-                if (tetromino.matrix[r][c] === ' ') {
-                    continue
+            tetromino.matrix[r].forEach((cell, colIdx) => {
+                if (!cell.isEmpty() && colIdx + tetromino.posX >= 0 && colIdx + tetromino.posX < arena.COLS) {
+                    matrix[r + tetromino.posY][colIdx + tetromino.posX] = tetromino.matrix[r][colIdx]
                 }
-                if  (c + tetromino.posX < 0) {
-                    continue;
-                }
-                if  (c + tetromino.posX >= COLS) {
-                    continue;
-                }
-                matrix[r + tetromino.posY][c + tetromino.posX] = tetromino.matrix[r][c]
-            }            
+            })            
         }
     }
 
     function refreshPlayfield() {
         matrix.forEach((row, rowIdx) => {
-            row.forEach((_, colIdx) => {
-                drawCell(colIdx, rowIdx, cellColors[matrix[rowIdx][colIdx]]);
+            row.forEach((cell, colIdx) => {
+                cell.draw(colIdx, rowIdx, arena);
             })
         });
     }
 
     function swipeFullRowsIfAny() {
         matrix.forEach((row, rowIdx) => {
-            if (!row.some(c => c === ' ')) {
-                matrix.unshift(matrix.splice(rowIdx, 1).flat().fill(' '));
+            if (!row.some(c => c.isEmpty())) {
+                matrix.unshift(matrix.splice(rowIdx, 1).flat().fill(new Cell()));
                 refreshPlayfield()
             } 
         });
@@ -254,7 +249,7 @@ function Tetris() {
         if (tetromino.posX < 0) {
             tetromino.posX++
         }
-        if (tetromino.posX + tetromino.matrix.length > COLS) {
+        if (tetromino.posX + tetromino.matrix.length > arena.COLS) {
             tetromino.posX--
         }
 

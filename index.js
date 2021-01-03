@@ -1,6 +1,6 @@
 function Tetromino() {
     this.posX = 3;
-    this.posY = 0;
+    this.posY = -1;
     tetrominoTypes = {
         'T': {
             'color': '#AD4D9C',
@@ -13,23 +13,23 @@ function Tetromino() {
         'Z': {
             'color': '#EF2029',
             'matrix': [
-                [1, 1, 0],
-                [0, 1, 1],
+                [2, 2, 0],
+                [0, 2, 2],
                 [0, 0, 0]
             ]
         },
         'O': {
             'color': '#F7D308',
             'matrix': [
-                [1, 1],
-                [1, 1]
+                [3, 3],
+                [3, 3]
             ]
         },
         'I': {
             'color': '#31C7EF',
             'matrix': [
                 [0, 0, 0, 0],
-                [1, 1, 1, 1],
+                [4, 4, 4, 4],
                 [0, 0, 0, 0],
                 [0, 0, 0, 0],
             ]
@@ -37,24 +37,24 @@ function Tetromino() {
         'J': {
             'color': '#5A65AD',
             'matrix': [
-                [1, 0, 0],
-                [1, 1, 1],
+                [5, 0, 0],
+                [5, 5, 5],
                 [0, 0, 0]
             ]
         },
         'L': {
             'color': '#EF7921',
             'matrix': [
-                [0, 0, 1],
-                [1, 1, 1],
+                [0, 0, 6],
+                [6, 6, 6],
                 [0, 0, 0]
             ]
         },
         'S': {
             'color': '#42B642',
             'matrix': [
-                [0, 1, 1],
-                [1, 1, 0],
+                [0, 7, 7],
+                [7, 7, 0],
                 [0, 0, 0]
             ]
         }
@@ -70,8 +70,16 @@ function Tetris() {
     const COLS = 10;
     const ROWS = 20;
     matrix = []
-    color = '#f1f1f1'
-    color1 = '#666'
+    colors = {
+        0: '#f1f1f1',
+        1: '#AD4D9C',
+        2: '#EF2029',
+        3: '#F7D308',
+        4: '#31C7EF',
+        5: '#5A65AD',
+        6: '#EF7921',
+        7: '#42B642',
+    }
 
     function init() {
         buildPlayground();
@@ -110,15 +118,15 @@ function Tetris() {
             matrix[r] = []
             for (let c = 0; c < COLS; c++) {
                 matrix[r][c] = 0
-                drawCell(c, r, color, color1)
+                drawCell(c, r, this.colors[0], '#666666')
             }
         }
     }
 
-    function drawCell(posX, posY, color, color1) {
-        context.fillStyle = color;
+    function drawCell(posX, posY, bgColor, outlineColor) {
+        context.fillStyle = bgColor;
         context.fillRect(posX * SCALE, posY * SCALE, SCALE, SCALE);
-        context.strokeStyle = color1
+        context.strokeStyle = outlineColor
         context.strokeRect(posX * SCALE, posY * SCALE, SCALE, SCALE)
     }
 
@@ -136,7 +144,7 @@ function Tetris() {
         for (let r = 0; r < tetromino.matrix.length; r++) {
             for (let c = 0; c < tetromino.matrix.length; c++) {
                 if (tetromino.matrix[r][c]) {
-                    drawCell(c + tetromino.posX, r + tetromino.posY, color, color1)
+                    drawCell(c + tetromino.posX, r + tetromino.posY, this.colors[0], '#666666')
                 }
             }
         }
@@ -152,7 +160,7 @@ function Tetris() {
                 let newX = tetromino.posX + c + x;
                 let newY = tetromino.posY + r + y;
     
-                if (newX < 0 || newX >= COLS || newY >= ROWS || matrix[newY][newX] === 1) {
+                if (newX < 0 || newX >= COLS || newY >= ROWS || matrix[newY][newX] !== 0) {
                     return true;
                 }
     
@@ -188,7 +196,9 @@ function Tetris() {
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 if (!matrix[r][c]) {
-                    drawCell(c, r, color, color1);
+                    drawCell(c, r, this.colors[matrix[r][c]], '#666666');
+                } else {
+                    drawCell(c, r, this.colors[matrix[r][c]], 'white');
                 }
             }
         }
@@ -201,8 +211,8 @@ function Tetris() {
                 isFull = isFull && matrix[r][c];
             }
             if (isFull) {
-                const row = matrix.splice(r, 1).fill(0);
-                matrix.unshift(row);
+                const emptyRow = matrix.splice(r, 1).flat().fill(0);
+                matrix.unshift(emptyRow);
                 refreshPlayfield()
             }
         }
@@ -213,6 +223,9 @@ function Tetris() {
         if (collides(tetromino, 0, 1)) {
             drawTetromino(tetromino);
             freeze(tetromino);
+            if (tetromino.posY <= 0) {
+                return;
+            }
             swipeFullRowsIfAny();
             this.currentTetromino = new Tetromino();
             return;
@@ -265,7 +278,7 @@ function Tetris() {
     }
 
     return {
-        start: start,
+        start,
     }
 }
 
